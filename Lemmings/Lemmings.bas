@@ -37,7 +37,6 @@ PROCInit
 	rem *fx 19
 	if init_seq%=0 then procDrawLevel
 		
-
 	procProcessLemmings
 
 	goto MainLoop
@@ -51,6 +50,7 @@ rem 	Process all lemmings
 rem ****************************************************************************************************************
 def PROCProcessLemmings
 
+	rem process entrance and dropping lemmings after the counter counts down to zero
 	if ActiveLem%=MAX_LEM% goto SkipCounter
 	Counter% = Counter% - 1
 	if Counter%=0 then 
@@ -61,17 +61,17 @@ def PROCProcessLemmings
 :SkipCounter
 
 
-
+	rem loop around all sprites
 	for i%=0 to MAX_LEM%
+		rem if lemming isn't active, then skip it
 		if LemActive%(i%) = 0 goto LemNotActive
 
+		rem copy out coords for faster access
 		x% = LemX%(i%)
 		y% = LemY%(i%)
 
-
-		yd%=0
-
 		rem Check UP for climbing first
+		yd%=0
 		for yy% = 1 to 5
 			c% = FNGetCollision(x%,y%-yy%)
 			if c% = 0 then yy%=10 else yd%=yd%-1
@@ -86,25 +86,27 @@ def PROCProcessLemmings
 			next
 		endif
 
-
+		rem Too high to walk up, so turn around - a climber would normally be activated here
 		if yd%=-5 then 
 			LemDir%(i%) = -LemDir%(i%)
 			if LemDir%(i%) = 1 then LemFrameBase%(i%)=FRAME_RBASE% else LemFrameBase%(i%)=FRAME_LBASE%
 		endif
 		
+		rem ELSE add on the Y delta
 		if yd%<>-5 then y% = y%+yd%
 
-		rem if not falling, then move on X
+		rem if not falling, then move on X - should really be made a faller here
 		if yd%<4 then x% = x% + LemDir%(i%)
 
-
+		rem store coords back into array
 		LemX%(i%) = x%
 		LemY%(i%) = y%
 
-
+		rem select sprite and set new position
 		vdu 23,27,4,i%
 		vdu 23,27,13,(x%-6);y%-10;
 
+		rem setup next animation frame
 		f% = (LemFrame%(i%) + 1) and 7
 		LemFrame%(i%) = f%
 		vdu 23, 27, 10, f% + LemFrameBase%(i%)
@@ -293,4 +295,6 @@ def PROCLoadBitmap(f$,n%,w%,h%)
 		vdu 255
 	next
 endproc
+
+
 
