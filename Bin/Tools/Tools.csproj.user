@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <NXTargetSerialNumber />
+    <NXTargetName>Default</NXTargetName>
+    <StartArguments>-spr 16x10 -max 24 C:\source\Agon\Lemmings\Graphics\Lemmings.png C:\source\Agon\Bin\Emu\sdcard\data\lem.spr</StartArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <NXTargetSerialNumber />
+    <NXTargetName>Default</NXTargetName>
+  </PropertyGroup>
+</Project>

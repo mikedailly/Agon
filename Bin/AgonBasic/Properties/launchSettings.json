@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AgonBasic": {
+      "commandName": "Project",
+      "commandLineArgs": "-var -rem test.bas test.bbc",
+      "workingDirectory": "C:\\source\\Agon\\TestProgram"
+    }
+  }
+}
