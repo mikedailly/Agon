@@ -7,6 +7,7 @@ rem vdu 22,137
 vdu 22,8		
 cls
 
+rem Change to 0 to ALWAYS draw the level, and 1 to draw on load only
 init_seq% = 1
 
 MAX_LEM%=20
@@ -133,7 +134,7 @@ rem ****************************************************************************
 def procDrawLevel
 
 	i%=24
-	for y%=0 to 128 step 32
+	for y%=0 to 160 step 32
 		for x%=0 to 288 step 32
 			vdu 23, 27, 0, i%
 			vdu 23, 27, 3, x%; y%;
@@ -203,7 +204,7 @@ def procLoadGraphics
 
 	if init_seq% =0 then
 		rem Load level "tiles"	
-		for i%=24 to 73
+		for i%=24 to 82
 			f$ = "data\back"+str$(i%-24)+".spr"
 			print "Name: "+f$
 			PROCLoadBitmap(f$,i%,32,32)

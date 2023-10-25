@@ -64,7 +64,7 @@
 640 =(q%(a%) AND Q%)
 650 DEF PROCDrawLevel
 660     i%=24
-670     FOR y%=0 TO 128 STEP 32
+670     FOR y%=0 TO 160 STEP 32
 680         FOR x%=0 TO 288 STEP 32
 690             VDU 23, 27, 0, i%
 700             VDU 23, 27, 3, x%; y%;
@@ -105,7 +105,7 @@
 1050         PROCLoadSprite(f$,i%,16,10)
 1060     NEXT
 1070     IF NOT(  d_e% =0 ) THEN GOTO 1140
-1080         FOR i%=24 TO 73
+1080         FOR i%=24 TO 82
 1090             f$ = "data\back"+STR$(i%-24)+".spr"
 1100             PRINT "Name: "+f$
 1110             PROCLoadBitmap(f$,i%,32,32)
