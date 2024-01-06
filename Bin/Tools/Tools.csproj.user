@@ -3,7 +3,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <NXTargetSerialNumber />
     <NXTargetName>Default</NXTargetName>
-    <StartArguments>-spr 16x10 -max 24 C:\source\Agon\Lemmings\Graphics\Lemmings.png C:\source\Agon\Bin\Emu\sdcard\data\lem.spr</StartArguments>
+    <StartArguments>-spr 32x32 C:\source\Agon\Lemmings\Graphics\level1_short.png C:\source\Agon\Bin\Emu\sdcard\data\back.spr</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <NXTargetSerialNumber />

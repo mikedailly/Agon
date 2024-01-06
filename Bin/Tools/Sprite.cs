@@ -163,6 +163,40 @@ namespace Tools
             File.WriteAllBytes(_filename, Buff);
         }
 
+        // #############################################################################################
+        /// <summary>
+        ///     Save the sprite to a PNG
+        /// </summary>
+        /// <param name="_filename"></param>
+        /// <param name="pal"></param>
+        // #############################################################################################
+        public void Save2222Format(string _filename = "")
+        {
+            if (_filename == "") _filename = Filename;
+
+            byte[] Buff = new byte[Width * Height];
+
+            int index = 0;
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    uint b = this[x, y];
+
+                    // Transparent?
+                    if((b&0x00ffffff)==0xFF00FF)
+                    {
+                        b = 0;
+                    }
+                    int col = (byte)((b & 0xff) >> 6)<<4;
+                    col |= (byte)((b & 0xff00) >> 14)<<2;
+                    col |= (byte)((b & 0xff0000) >> 22);
+                    col |= (byte)((b & 0xff000000) >> 30)<<6;
+                    Buff[index++] = (byte) (col&0xff);
+                }
+            }
+            File.WriteAllBytes(_filename, Buff);
+        }
 
 
         /// <summary>
@@ -234,7 +268,7 @@ namespace Tools
                 {
                     Sprite s = GrabSprite(_img, x*_w, y*_h, _w, _h);
                     s.Filename = _OutName + SprNum.ToString() + _OutExt;
-                    s.Save24Bit(s.Filename);
+                    s.Save2222Format(s.Filename);
                     //s.SavePNG(_OutName + SprNum.ToString() + ".png");
                     SprNum++;
                     _max--;

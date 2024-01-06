@@ -16,7 +16,7 @@ FRAME_RBASE%=0	:	rem Right facing frames
 
 rem vdu 19,1,1,0,0,0
 dim FileBuffer% 6400
-dim CollisionBuffer%(6400)
+dim CollisionBuffer% 6400
 dim LemX%(20)
 dim LemY%(20)
 dim LemDir%(20)
@@ -46,6 +46,13 @@ PROCInit
 end
 
 
+x% = LemX%(index%)
+y% = LemY%(index%)
+frame% = LemFrame%(index%)
+
+
+
+
 rem ****************************************************************************************************************
 rem 	Process all lemmings
 rem ****************************************************************************************************************
@@ -73,17 +80,21 @@ def PROCProcessLemmings
 
 		rem Check UP for climbing first
 		yd%=0
+		x8% = x% div 8
+		bit% =  bits%(x% and 7)
 		for yy% = 1 to 5
-			c% = FNGetCollision(x%,y%-yy%)
-			if c% = 0 then yy%=10 else yd%=yd%-1
+			a% = x8% + ((y%-yy%)*40)
+			cx% = (?(CollisionBuffer%+a%) and bit%) 
+			if cx% = 0 then yy%=10 else yd%=yd%-1
 		next
 
 		rem if no "wall" or hill, then check for falling
 		if yd% = 0 then
 			rem no "up", so Check "down" collision for falling
 			for yy% = 0 to 4
-				c% = FNGetCollision(x%,y%+yy%)
-				if c% = 0 then yd%=yd%+1 else yy%=10
+				a% = x8% + ((y%+yy%)*40)
+				cx% = (?(CollisionBuffer%+a%) and bit%) 
+				if cx% = 0 then yd%=yd%+1 else yy%=10
 			next
 		endif
 
@@ -124,21 +135,22 @@ rem ****************************************************************************
 def FNGetCollision(cx%,cy%) 
 a% = (cx% div 8) + (cy%*40)
 bit% = bits%(cx% and 7)	
-=(CollisionBuffer%(a%) and bit%)
+=(?(CollisionBuffer%+a%) and bit%)
 
 
 
 rem ****************************************************************************************************************
-rem 	Render the level...
+rem 	Redraw the level...
 rem ****************************************************************************************************************
 def procDrawLevel
 
-	i%=24
+	bitmap_base%=24
 	for y%=0 to 160 step 32
 		for x%=0 to 288 step 32
-			vdu 23, 27, 0, i%
+			rem vdu 23, 27, 0, i%
+			vdu 23, 27, 32, bitmap_base%; 
 			vdu 23, 27, 3, x%; y%;
-			i% = i% + 1
+			bitmap_base% = bitmap_base% + 1
 		next
 	next
 
@@ -174,14 +186,9 @@ def PROCInit
 		LemFrameBase%(i%) = FRAME_RBASE%
 	next
 
-	rem Load the collision map
-	rem PROCLoadData("data\coll.dat",CollisionBuffer%,6400)
+	rem Load the collision map directly into the collision buffer (the same way files do)
 	print "Loading Collision"
-	oscli("LOAD data\coll.dat " + str$(MB%+FileBuffer%) )
-	for i%=0 to 6400
-		CollisionBuffer%(i%) = ?(FileBuffer%+i%) 
-	next
-
+	oscli("LOAD data\coll.dat " + str$(MB%+CollisionBuffer%) )
 
 	rem Load all -graphics
 	procLoadGraphics
@@ -195,22 +202,28 @@ def procLoadGraphics
 	rem Disable cursor
 	VDU 23,1,0
 
+	buffer_id%=0
 	rem Load lemming "sprites"
 	for i%=0 to 23
 		f$ = "data\lem"+str$(i%)+".spr"
-		PROCLoadSprite(f$,i%,16,10)
+		rem PROCLoadSprite(f$,buffer_id%,16,10)
+		PROCLoadBitmap(f$,buffer_id%,16,10)
+		buffer_id% = buffer_id% + 1
 	next
 
-
+	
+	
 	if init_seq% =0 then
 		rem Load level "tiles"	
-		for i%=24 to 82
-			f$ = "data\back"+str$(i%-24)+".spr"
-			print "Name: "+f$
-			PROCLoadBitmap(f$,i%,32,32)
-		next
-		cls
-	endif
+	 	for i%=0 to 59
+	 		f$ = "data\back"+str$(i%)+".spr"
+	 		print "Name: "+f$
+	 		PROCLoadBitmap(f$,buffer_id%,32,32)
+	 		buffer_id% = buffer_id% + 1
+	 	next
+	 	cls
+	 endif
+
 
 	if init_seq% = 1 then
 		cls
@@ -221,18 +234,19 @@ def procLoadGraphics
 				f$ = "data\back"+str$(i%)+".spr"
 
 				rem load bitmap into slot 24
-				PROCLoadBitmap(f$,24,32,32)
-			
+				PROCLoadBitmap(f$,buffer_id%,32,32)
+				
 				rem draw bitmap 24
-				vdu 23, 27, 0, 24
+				VDU 23, 27, 32, buffer_id%; 
 				vdu 23, 27, 3, x%; y%;
+
+				buffer_id% = buffer_id% + 1
 				i% = i% + 1
 			next
 		next
-
 	endif
 
-	rem setup sprites
+	rem setup sprites adding frames to each one
 	for i%=0 to MAX_LEM%
 		rem select sprite
 		vdu 23,27,4,i%
@@ -240,10 +254,12 @@ def procLoadGraphics
 		vdu 23,27,5
 		rem Add bitmap to sprite frames
 		for b%=0 to 23
-			vdu 23,27,6, b%
+			rem Add bitmap to the current sprite
+			VDU 23, 27, &26, b%;
 		next		
 		vdu 23,27,11
 	next
+
 	vdu 23,27,4,0
 	vdu 23,27,13,30;30;
 	vdu 23,27,10,1
@@ -252,34 +268,7 @@ def procLoadGraphics
 endproc
 
 rem ****************************************************************************************************************
-rem Load a bitmap into VDP RAM - pinched from sprite demo
-rem F$ - Filename of bitmap
-rem N% - Bitmap number
-rem W% - Bitmap width
-rem H% - Bitmap height
-rem ****************************************************************************************************************
-def PROCLoadSprite(f$,n%,w%,h%)
-	print "Name: "+f$
-	oscli("LOAD " + f$ + " " + str$(MB%+FileBuffer%))
-	vdu 23,27,0,n%
-	vdu 23,27,1,w%;h%;
-	for index%=0 to (w%*h%*3)-1 step 3
-		r% = ?(FileBuffer%+index%+2) 
-		g% = ?(FileBuffer%+index%+1) 
-		b% = ?(FileBuffer%+index%+0) 
-		a% = 255
-		if r%=255 and g%=0 and b%=255 then a%=0
-		
-		vdu r%
-		vdu g%
-		vdu b%
-		vdu a%
-	next
-endproc
-
-
-rem ****************************************************************************************************************
-rem Load a bitmap into VDP RAM - pinched from sprite demo
+rem Load a 2222 foramt bitmap into VDP RAM
 rem F$ - Filename of bitmap
 rem N% - Bitmap number
 rem W% - Bitmap width
@@ -287,14 +276,25 @@ rem H% - Bitmap height
 rem ****************************************************************************************************************
 def PROCLoadBitmap(f$,n%,w%,h%)
 	oscli("LOAD " + f$ + " " + str$(MB%+FileBuffer%))
-	vdu 23,27,0,n%
-	vdu 23,27,1,w%;h%;
-	for index%=0 to (w%*h%*3)-1 step 3
-		vdu ?(FileBuffer%+index%+2) 
-		vdu ?(FileBuffer%+index%+1) 
-		vdu ?(FileBuffer%+index%+0) 
-		vdu 255
+	fsize% = w%*h%
+
+	rem create a buffer and clear it, ready for loading the bitmap into
+	VDU 23, 0 160, n%; 2;
+
+	rem Write block to a buffer
+	VDU 23, 0 160, n%; 0,fsize%;
+	for index%=0 to fsize%-1
+		vdu ?(FileBuffer%+index%)
 	next
+
+	rem conolidate blocks in a buffer
+	VDU 23, 0, 160, n%; 14
+
+	rem  Select bitmap (using a buffer ID)
+	VDU 23, 27, 32, n%;
+
+	rem  Create bitmap from buffer
+	VDU 23, 27, 33, w%; h%; 1
 endproc
 
 
