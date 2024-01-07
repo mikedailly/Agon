@@ -84,8 +84,7 @@ def PROCProcessLemmings
 		bit% =  bits%(x% and 7)
 		for yy% = 1 to 5
 			a% = x8% + ((y%-yy%)*40)
-			cx% = (?(CollisionBuffer%+a%) and bit%) 
-			if cx% = 0 then yy%=10 else yd%=yd%-1
+			if (?(CollisionBuffer%+a%) and bit%)  = 0 then yy%=10 else yd%=yd%-1
 		next
 
 		rem if no "wall" or hill, then check for falling
@@ -93,8 +92,7 @@ def PROCProcessLemmings
 			rem no "up", so Check "down" collision for falling
 			for yy% = 0 to 4
 				a% = x8% + ((y%+yy%)*40)
-				cx% = (?(CollisionBuffer%+a%) and bit%) 
-				if cx% = 0 then yd%=yd%+1 else yy%=10
+				if (?(CollisionBuffer%+a%) and bit%)  = 0 then yd%=yd%+1 else yy%=10
 			next
 		endif
 
