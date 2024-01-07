@@ -165,10 +165,9 @@ namespace Tools
 
         // #############################################################################################
         /// <summary>
-        ///     Save the sprite to a PNG
+        ///     Save the sprite to a 2222 format raw data file
         /// </summary>
-        /// <param name="_filename"></param>
-        /// <param name="pal"></param>
+        /// <param name="_filename">Filename to save to</param>
         // #############################################################################################
         public void Save2222Format(string _filename = "")
         {
