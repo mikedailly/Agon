@@ -202,11 +202,10 @@ def procLoadGraphics
 	rem Disable cursor
 	VDU 23,1,0
 
-	buffer_id%=0
 	rem Load lemming "sprites"
+	buffer_id%=0
 	for i%=0 to 23
 		f$ = "data\lem"+str$(i%)+".spr"
-		rem PROCLoadSprite(f$,buffer_id%,16,10)
 		PROCLoadBitmap(f$,buffer_id%,16,10)
 		buffer_id% = buffer_id% + 1
 	next
@@ -236,7 +235,7 @@ def procLoadGraphics
 				rem load bitmap into slot 24
 				PROCLoadBitmap(f$,buffer_id%,32,32)
 				
-				rem draw bitmap 24
+				rem draw bitmap "buffer_id%"
 				VDU 23, 27, 32, buffer_id%; 
 				vdu 23, 27, 3, x%; y%;
 
@@ -287,7 +286,7 @@ def PROCLoadBitmap(f$,n%,w%,h%)
 		vdu ?(FileBuffer%+index%)
 	next
 
-	rem conolidate blocks in a buffer
+	rem consolidate blocks in a buffer
 	VDU 23, 0, 160, n%; 14
 
 	rem  Select bitmap (using a buffer ID)
@@ -296,6 +295,7 @@ def PROCLoadBitmap(f$,n%,w%,h%)
 	rem  Create bitmap from buffer
 	VDU 23, 27, 33, w%; h%; 1
 endproc
+
 
 
 
