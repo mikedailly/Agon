@@ -391,7 +391,7 @@ namespace Tools
 
                 for(int i = 0; i < s.Raw.Length; i++)
                 {
-                    Buff[index++] = (byte) (s.Raw[i]&0xff);
+                    Buff[index++] = (byte) (255^s.Raw[i]&0xff);     // invert mask
                 }
             }
 
