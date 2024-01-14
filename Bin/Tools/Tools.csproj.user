@@ -3,10 +3,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <NXTargetSerialNumber />
     <NXTargetName>Default</NXTargetName>
-    <StartArguments>-spr 32x32 C:\source\Agon\Lemmings\Graphics\level1_short.png C:\source\Agon\Bin\Emu\sdcard\data\back.spr</StartArguments>
+    <StartArguments>-mask C:\source\Agon\Lemmings\Graphics\Masks.png C:\source\Agon\Bin\Emu\sdcard\data\Masks.spr</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <NXTargetSerialNumber />
     <NXTargetName>Default</NXTargetName>
+    <StartArguments>-mask C:\source\Agon\Lemmings\Graphics\Masks.png C:\source\Agon\Bin\Emu\sdcard\data\Masks.spr</StartArguments>
   </PropertyGroup>
 </Project>

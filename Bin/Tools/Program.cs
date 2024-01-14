@@ -37,6 +37,7 @@ namespace Tools
 
         public static bool GrabSprites = false;
         public static bool GrabCollision = false;
+        public static bool GrabMasks = false;
 
         public static int max_count = 0x7fffffff;
 
@@ -97,6 +98,9 @@ namespace Tools
                         break;
                     case "-col":
                         GrabCollision = true;
+                        break;
+                    case "-mask":
+                        GrabMasks = true;
                         break;
 
                     //case "-bmp": bBMP256Conv = true; break;         // convert BMP into 256 colour
@@ -166,6 +170,7 @@ namespace Tools
 
             if (GrabSprites) Sprite.Grab(img, GridWidth, GridHeight, OutFile, OutFileExt, max_count);
             if (GrabCollision) ProcessCollision(img);
+            if (GrabMasks) Sprite.GrabMasks(img, OutFile, OutFileExt, max_count);
         }
     }
 }

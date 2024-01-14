@@ -46,7 +46,7 @@ namespace Tools
         ///     Get/Set array access into the image
         /// </summary>
         /// <param name="_x">x coordinate</param>
-        /// <param name="_y">y coordinate</param>
+        /// <param name="_y">y coordinate</param
         /// <returns>pixel</returns>
         // #############################################################################################
         public uint this[int _x, int _y]
@@ -274,7 +274,128 @@ namespace Tools
                     if (_max == 0) return;
                 }
             }
+        }
 
+
+        // ##################################################################################################################################
+        /// <summary>
+        ///     Grab a stack of sprites from an image
+        /// </summary>
+        /// <param name="_img"></param>
+        /// <param name="_w"></param>
+        /// <param name="_h"></param>
+        /// <param name="_OutName"></param>
+        /// <param name="_OutExt"></param>
+        /// <param name="_max">Max number of sprites to grab</param>
+        // ##################################################################################################################################
+        public static void GrabMasks(Image _img, string _OutName, string _OutExt, int _max)
+        {
+            int len = _img.Raw.Length;
+            int index = 0;
+
+            List<Sprite> masks = new List<Sprite>();
+            while(index<len)
+            {
+                UInt32 rect_col = _img.Raw[index++];
+                if ((rect_col & 0x00ffffff) == 0xFF00FF) continue;     // transparent?
+
+                // Get width
+                int lstart = index - 1;
+                int width = 0;
+                while(index < len)
+                {
+                    UInt32 c = _img.Raw[index++];
+                    if (c == rect_col) continue;
+                    break;
+                }
+                if (lstart > len) break;
+                index--;
+                width = (index - lstart)-2;
+
+                // Get height
+                index = lstart+_img.Width;
+                int height= 0;
+                while (lstart < len)
+                {
+                    UInt32 c = _img.Raw[index];
+                    index += _img.Width;
+                    if (c == rect_col) continue;
+                    break;
+                }
+                if (lstart > len) break;
+                height = ((index - lstart)/_img.Width)-2;
+
+                // remember start of sprite
+                index = lstart;
+
+                // get start of mask on image
+                lstart = (lstart + _img.Width) + 1;
+
+                // Now copy the image into a 
+                Sprite s = new Sprite(width, height);
+                int sprindex = 0;
+                int maskindex = 0;
+                for(int y=0;y<height;y++)
+                {
+                    sprindex = lstart;
+                    for (int x=0;x<width;x++)
+                    {
+                        UInt32 c = _img.Raw[sprindex++];
+
+                        // Transparent?
+                        if ((c & 0x00ffffff) == 0xFF00FF)
+                        {
+                            c = 0;
+                        }
+                        else
+                        {
+                            c = 0xff;
+                        }
+                        s.Raw[maskindex++] = (byte)(c&0xff);
+                    }
+                    lstart += _img.Width;
+                }
+                masks.Add(s);
+
+
+                // clear mask from image
+                width += 2;
+                height += 2;
+                lstart = index;
+                index += width;
+                sprindex = 0;
+                for (int y = 0; y < height; y++)
+                {
+                    sprindex = lstart;
+                    for (int x = 0; x < width; x++)
+                    {
+                        _img.Raw[sprindex++] = 0xFFFF00FF;
+                    }
+                    lstart += _img.Width;
+                }
+            }
+
+            // Now write out all masks
+            int total_size = 0;
+            foreach(Sprite s in masks)
+            {
+                total_size += s.Raw.Length + 2;         // width,height, [size]
+            }
+
+            byte[] Buff = new byte[total_size];
+            index = 0;
+            foreach (Sprite s in masks)
+            {
+                Buff[index++] = (byte) s.Width;
+                Buff[index++] = (byte) s.Height;
+
+                for(int i = 0; i < s.Raw.Length; i++)
+                {
+                    Buff[index++] = (byte) (s.Raw[i]&0xff);
+                }
+            }
+
+            File.WriteAllBytes(_OutName+_OutExt, Buff);
         }
     }
 }
