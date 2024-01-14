@@ -95,8 +95,8 @@ namespace AgonBasic
         public bool isSymbol(char _c)
         {
             //string symbols = "!\"()£$%^&*_-=+[]{}#~'@;:,<.>/?\\|";
-            // Don't include $  %  or  .
-            string symbols = "!\"()£^&*_-=+[]{}#~'@;:,<>/?\\|";
+            // Don't include $  %  & or  .
+            string symbols = "!\"()£^*_-=+[]{}#~'@;:,<>/?\\|";
             if (symbols.IndexOf(_c) > 0) return true;
             return false;
         }
@@ -270,7 +270,7 @@ namespace AgonBasic
             }
             else if (_line.StartsWith(":") && pass == 2) return false;
 
-                int index = 0;
+            int index = 0;
             bool first = true;
             while (true)
             {
@@ -311,9 +311,9 @@ namespace AgonBasic
                 }
                 else
                 {
-                    // did we find a keyword,a number or a symbol? if not we have an ID
+                    // did we find a keyword,a number (inc HEX which starts with a &) or a symbol? if not we have an ID
                     char c = word[0];
-                    if (!found && (c <'0' || c > '9') && !isSymbol(c) && !isWhiteSpace(c))
+                    if (!found && (c <'0' || c > '9') && !isSymbol(c) && !isWhiteSpace(c) && c!='&')
                     {
                         // Add symbol to pool on pass 1
                         string post_string = ""+word[word.Length - 1];
