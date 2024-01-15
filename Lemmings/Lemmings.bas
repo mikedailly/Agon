@@ -140,7 +140,7 @@ def PROCProcessLemmings
 		cb% = CollisionBuffer%+x8% + ((y%-1)*40)
 		for yy% = 1 to 5	
 			rem PEEK collision map and AND it with the column bit the lemming is in.		
-			if (?cb% and bit%)  = 0 then yy%=10 else yd%=yd%-1
+			if (?cb% and bit%) = 0 then yy%=10 else yd%=yd%-1
 			rem move UP a row of pixels (y-1)
 			 cb% = cb% - 40
 		next
@@ -154,7 +154,7 @@ def PROCProcessLemmings
 			cb% = CollisionBuffer% + x8% + (y%*40)
 			for yy% = 0 to 4
 				rem PEEK collision map and AND it with the column bit the lemming is in.		
-				if (?cb% and bit%)  = 0 then yd%=yd%+1 else yy%=10
+				if (?cb% and bit%) = 0 then yd%=yd%+1 else yy%=10
 				rem move DOWN a row of pixels (y-1)
 				cb% = cb% + 40
 			next
@@ -182,12 +182,10 @@ def PROCProcessLemmings
 		vdu 23,27,4,i%
 		vdu 23,27,13,(x%-6);y%-10;
 		
-
 		rem setup next animation frame
 		f% = (LemFrame%(i%) + 1) and 7
 		LemFrame%(i%) = f%
 
-		vdu 23,27,4,i%
 		vdu 23, 27, 10, f% + LemFrameBase%(i%)
 
 :LemNotActive
