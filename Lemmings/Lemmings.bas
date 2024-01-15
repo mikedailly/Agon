@@ -8,8 +8,6 @@ vdu 22,8
 cls
 
 rem Change to 0 to ALWAYS draw the level, and 1 to draw on load only
-init_seq% = 2
-
 MASK_SIZE=370	:	rem size of the mask file
 MAX_LEM%=20
 FRAME_LBASE%=8	:	rem Left facing frames
@@ -42,8 +40,8 @@ PROCInit
 change_counter%=100
 :MainLoop
 	rem *fx 19
-	rem if init_seq%=0 then procDrawLevel
-	
+
+	rem draw background	
 	vdu 23, 27, 32, background%; 
 	vdu 23, 27, 3, 0; 0;
 
@@ -136,18 +134,31 @@ def PROCProcessLemmings
 		yd%=0
 		x8% = x% div 8
 		bit% =  bits%(x% and 7)
-		for yy% = 1 to 5
-			a% = x8% + ((y%-yy%)*40)
-			if (?(CollisionBuffer%+a%) and bit%)  = 0 then yy%=10 else yd%=yd%-1
+		
+
+		rem work out the byte in the collision map we're about to start with
+		cb% = CollisionBuffer%+x8% + ((y%-1)*40)
+		for yy% = 1 to 5	
+			rem PEEK collision map and AND it with the column bit the lemming is in.		
+			if (?cb% and bit%)  = 0 then yy%=10 else yd%=yd%-1
+			rem move UP a row of pixels (y-1)
+			 cb% = cb% - 40
 		next
+
 
 		rem if no "wall" or hill, then check for falling
 		if yd% = 0 then
 			rem no "up", so Check "down" collision for falling
+
+			rem work out the byte in the collision map we're about to start with
+			cb% = CollisionBuffer% + x8% + (y%*40)
 			for yy% = 0 to 4
-				a% = x8% + ((y%+yy%)*40)
-				if (?(CollisionBuffer%+a%) and bit%)  = 0 then yd%=yd%+1 else yy%=10
+				rem PEEK collision map and AND it with the column bit the lemming is in.		
+				if (?cb% and bit%)  = 0 then yd%=yd%+1 else yy%=10
+				rem move DOWN a row of pixels (y-1)
+				cb% = cb% + 40
 			next
+
 		endif
 
 		rem Too high to walk up, so turn around - a climber would normally be activated here
@@ -195,34 +206,10 @@ rem 	get collision at pixel cx,cy
 rem ****************************************************************************************************************
 def FNGetCollision(cx%,cy%) 
 a% = (cx% div 8) + (cy%*40)
+
 bit% = bits%(cx% and 7)	
 =(?(CollisionBuffer%+a%) and bit%)
 
-
-
-rem ****************************************************************************************************************
-rem 	Redraw the level...
-rem ****************************************************************************************************************
-def procDrawLevel
-
-	if init_seq% = 2 then
-			vdu 23, 27, 32, background%; 
-			vdu 23, 27, 3, 0; 0;
-	endif
-
-	if init_seq% <> 2 then
-		bitmap_base%=24
-		for y%=0 to 160 step 32
-			for x%=0 to 288 step 32
-				rem vdu 23, 27, 0, i%
-				vdu 23, 27, 32, bitmap_base%; 
-				vdu 23, 27, 3, x%; y%;
-				bitmap_base% = bitmap_base% + 1
-			next
-		next
-	endif
-
-endproc
 
 
 rem ****************************************************************************************************************
@@ -284,50 +271,14 @@ def procLoadGraphics
 	next
 
 	print "Loading Background"
-	if init_seq% =0 then
-		rem Load level "tiles"	
-	 	for i%=0 to 59
-	 		f$ = "data\back"+str$(i%)+".spr"
-	 		print "Name: "+f$
-	 		PROCLoadBitmap(f$,buffer_id%,32,32)
-	 		buffer_id% = buffer_id% + 1
-	 	next
-	 	cls
-	 endif
+	PROCLoadLargeBitmap("data\background.spr",buffer_id%,320,192)
+	background% = buffer_id%
 
+	rem draw bitmap "buffer_id%"
+	VDU 23, 27, 32, background%; 
+	vdu 23, 27, 3, 0; 0;
 
-	if init_seq% = 1 then
-		cls
-		rem Load level "tiles" and draw as we go
-		i%=0
-		background% = buffer_id%
-		for y%=0 to 160 step 32
-			for x%=0 to 288 step 32
-				f$ = "data\back"+str$(i%)+".spr"
-
-				rem load bitmap into slot 24
-				PROCLoadBitmap(f$,buffer_id%,32,32)
-				
-				rem draw bitmap "buffer_id%"
-				VDU 23, 27, 32, buffer_id%; 
-				vdu 23, 27, 3, x%; y%;
-
-				buffer_id% = buffer_id% + 1
-				i% = i% + 1
-			next
-		next
-	endif
-
-	if init_seq% =2 then
-		PROCLoadLargeBitmap("data\background.spr",buffer_id%,320,192)
-		background% = buffer_id%
-
-		rem draw bitmap "buffer_id%"
-		VDU 23, 27, 32, background%; 
-		vdu 23, 27, 3, 0; 0;
-
-		buffer_id% = buffer_id% + 1
-	endif
+	buffer_id% = buffer_id% + 1
 
 
 	rem load cursors
