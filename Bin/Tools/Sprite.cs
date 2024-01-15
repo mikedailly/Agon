@@ -323,6 +323,7 @@ namespace Tools
                     break;
                 }
                 if (lstart > len) break;
+                index -= _img.Width;
                 height = ((index - lstart)/_img.Width)-2;
 
                 // remember start of sprite
@@ -386,12 +387,12 @@ namespace Tools
             index = 0;
             foreach (Sprite s in masks)
             {
-                Buff[index++] = (byte) s.Width;
-                Buff[index++] = (byte) s.Height;
+                Buff[index++] = (byte) (s.Width-1);
+                Buff[index++] = (byte) (s.Height-1);
 
                 for(int i = 0; i < s.Raw.Length; i++)
                 {
-                    Buff[index++] = (byte) (255^s.Raw[i]&0xff);     // invert mask
+                    Buff[index++] = (byte) ((255^s.Raw[i]&0xff)|0xc0);     // invert mask
                 }
             }
 
