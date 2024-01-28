@@ -49,7 +49,7 @@ change_counter%=100
 
 
 	change_counter% = change_counter%-1
-	if(change_counter% = 0) then procClearBombShape(200,64,0)
+	if(change_counter% = 0) then procClearMaskShape(200,64,0)
 
 	goto MainLoop
 
@@ -81,15 +81,26 @@ rem x% - X coord of mask
 rem y% - Y coord of mask
 rem n% - mask to use
 rem ****************************************************************************************************************
-def procClearBombShape(x%,y%,n%)
+def procClearMaskShape(x%,y%,n%)
 
+	rem Only 1 mask so far - otherwise we'd "loop" over the masks here
 	n% = 0
 
-	w% = ?(Masks%+n%)
-	n% = n% + 1
-	h% = ?(Masks%+n%)
-	n% = n% + 1
+	total% = ?(Masks%+n%)
+	total% = total% + (?(Masks%+n%+1)*256)
 
+	rem bitmap width height
+	w% = ?(Masks%+n%+2)
+	h% = ?(Masks%+n%+3)
+
+	rem bitmaask width/height
+	mw% = ?(Masks%+n%+4)
+	mh% = ?(Masks%+n%+5)
+	n% = n% + 6
+
+	maskbaseoffset% = n%
+
+	rem Mask to screen bitmap
 	for i%=0 to h%
 		VDU 23, 0, 160, (background%); 5,    &C5, (320*y%)+x%+(320*i%); w%+1;
 		for b%= 0 to w%
@@ -98,8 +109,32 @@ def procClearBombShape(x%,y%,n%)
 		n% = n% + b%
 	next
 
+	rem Now mask to level bitmask - first get shift number
+	offs% = x% and 7
+	rem now get mask base
+	offs% = offs% * (mw%*mh%)
+	rem finally get base in Masks buffer itself
+	offs% = offs% + ((w%+1)*(h%+1))
+	rem add on base of mask
+	offs% = offs% + maskbaseoffset%
 
-	rem procDrawLevel
+	print " "
+	print "off="+str$(offs%)
+
+	maskindex% = (x%/8) + (y%*40)
+	cb% = CollisionBuffer% + maskindex%
+	MasksBase% = Masks% + offs%
+
+	rem now apply mask 
+	for yy% =0 to (mh%-1)
+		for xx% =0 to (mw%-1)
+			?cb% = ?MasksBase% and ?cb%
+			MasksBase% = MasksBase% + 1
+			cb% = cb% + 1
+		next
+		cb% = cb% + (40-mw%)
+	next
+
 
 endproc
 
@@ -193,8 +228,8 @@ def PROCProcessLemmings
 	VDU 23, 27, 15
 
 
-	VDU 5
-	MOVE 0,400
+	rem VDU 5
+	rem MOVE 0,400
 
 endproc
 
@@ -377,10 +412,7 @@ def PROCLoadLargeBitmap(f$,n%,w%,h%)
 	rem create a buffer and clear it, ready for loading the bitmap into
 	VDU 23, 0 160, n%; 2;
 
-	rem Write block to a buffer
-	rem VDU 23, 0 160, n%; 0,fsize%;
-	counter%=0
-
+	rem Read in a block at a time, showing a "." for each block loaded
 	blockSize% = 1024
 	left% = fsize%
 	 REPEAT

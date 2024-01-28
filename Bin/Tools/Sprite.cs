@@ -41,6 +41,8 @@ namespace Tools
         /// <summary>Uncropped height of sprite</summary>
         public string Filename;
 
+        /// <summary>pre-rotayted</summary>
+        public byte[] Masks;
         // #############################################################################################
         /// <summary>
         ///     Get/Set array access into the image
@@ -198,12 +200,14 @@ namespace Tools
         }
 
 
+        // ##################################################################################################################################
         /// <summary>
         ///     Draw this sprite onto the provided image
         /// </summary>
         /// <param name="_img"></param>
         /// <param name="_xx"></param>
         /// <param name="_yy"></param>
+        // ##################################################################################################################################
         public void Draw(Image _img, int _xx, int _yy)
         {
             // loop through all pixels
@@ -276,6 +280,75 @@ namespace Tools
             }
         }
 
+        // ##################################################################################################################################
+        /// <summary>
+        ///     Take the sprite data, and generate pre-rotated 1 bit masks
+        /// </summary>
+        // ##################################################################################################################################
+        private void GenerateBitmasks()
+        {
+            int w = ((Width + 7) / 8)+1;
+            int h = Height;
+
+            byte[] Memory = new byte[2+(8 * w * h)];
+            Memory[0] = (byte)w;
+            Memory[1] = (byte)h;
+
+            int index = 2;
+            for (int i = 0; i < 8; i++)
+            {
+                // fill mask
+                for(int f = 0; f < (w * h); f++)
+                {
+                    Memory[f + index] = 0xff;
+                }
+
+                // Now loop through the mask and clear bits
+                for (int yy = 0; yy < Height; yy++)
+                {
+                    for (int xx = 0; xx < Width; xx++)
+                    {
+                        uint col = this[xx, yy];
+                        if ((col & 0xffffff) != 0)
+                        {
+                            int off = (xx >> 3) + (yy * w);
+                            int mask = 1 << (xx & 7);
+                            Memory[index + off] &= (byte)~mask;
+                        }
+                    }
+                }
+
+                // Now rotate the mask by "i" bits
+                if (i != 0)
+                {
+                    for (int yy = 0; yy < h; yy++)
+                    {
+                        // can't be bothered doing a barrel shift, so just rotate each line "r" times
+                        for (int r = 0; r < i; r++)
+                        {
+                            byte bit = 0x80;
+                            int off = (yy * w);
+                            for (int xx = 0; xx < w; xx++)
+                            {
+                                byte col = Memory[index + off];
+                                byte bit2 = (byte)(col & 1);
+                                col = (byte)((col >> 1) | bit);
+                                if (bit2 == 0) bit = 0x00; else bit = 0x80;
+                                off++;
+                            }
+                        }
+                    }
+                }
+
+                // next mask
+                index += (w * h);
+            }
+
+
+
+            // Now make the "RAW" image fit everything for saving later
+            Masks = Memory;            
+        }
 
         // ##################################################################################################################################
         /// <summary>
@@ -356,7 +429,10 @@ namespace Tools
                     }
                     lstart += _img.Width;
                 }
+                s.GenerateBitmasks();
                 masks.Add(s);
+
+
 
 
                 // clear mask from image
@@ -381,19 +457,31 @@ namespace Tools
             foreach(Sprite s in masks)
             {
                 total_size += s.Raw.Length + 2;         // width,height, [size]
+                total_size += s.Masks.Length;           // bitmasks + width + height
+                total_size += 2;                        // total size - to allow skipping
             }
 
             byte[] Buff = new byte[total_size];
             index = 0;
             foreach (Sprite s in masks)
             {
+                // work out ""skip" bytes"
+                int total = s.Masks.Length + s.Masks.Length + 2;
+                Buff[index++] = (byte)(total & 0xff);
+                Buff[index++] = (byte) ((total>>8) & 0xff);
                 Buff[index++] = (byte) (s.Width-1);
                 Buff[index++] = (byte) (s.Height-1);
+                Buff[index++] = s.Masks[0];             // mask width
+                Buff[index++] = s.Masks[1];             // mask height
 
-                for(int i = 0; i < s.Raw.Length; i++)
+                for (int i = 0; i < s.Raw.Length; i++)
                 {
                     Buff[index++] = (byte) ((255^s.Raw[i]&0xff)|0xc0);     // invert mask
                 }
+
+                // Now copy the mask in
+                Array.Copy(s.Masks, 2, Buff, index, s.Masks.Length - 2);
+                index += s.Masks.Length - 2;
             }
 
             File.WriteAllBytes(_OutName+_OutExt, Buff);

@@ -25,7 +25,7 @@
 250     VDU 23, 27, 3, 0; 0;
 260     PROCProcessLemmings
 270     F_G% = F_G%-1
-280     IF(F_G% = 0) THEN PROCClearBombShape(200,64,0)
+280     IF(F_G% = 0) THEN PROCClearMaskShape(200,64,0)
 290     GOTO 240
 300 END
 310 x%=0
@@ -38,157 +38,175 @@
 380     NEXT
 390     PROCDrawLevel
 400 ENDPROC
-410 DEF PROCClearBombShape(x%,y%,n%)
+410 DEF PROCClearMaskShape(x%,y%,n%)
 420     n% = 0
-430     w% = ?(q%+n%)
-440     n% = n% + 1
-450     h% = ?(q%+n%)
-460     n% = n% + 1
-470     FOR i%=0 TO h%
-480         VDU 23, 0, 160, (H%); 5,    &C5, (320*y%)+x%+(320*i%); w%+1;
-490         FOR b%= 0 TO w%
-500             VDU ?(q%+n%+b%)
-510         NEXT
-520         n% = n% + b%
-530     NEXT
-540 ENDPROC
-550 DEF PROCProcessLemmings
-560     IF E%=e_g% GOTO 620
-570     C% = C% - 1
-580     IF NOT(  C%=0 ) THEN GOTO 620
-590         C% = D%
-600         u%(E%) = 1
-610         E% = E% + 1
-620     FOR i%=0 TO e_g%
-630         IF u%(i%) = 0 GOTO 920
-640         x% = r%(i%)
-650         y% = s%(i%)
-660         M%=0
-670         NO% = x% DIV 8
-680         P% =  A%(x% AND 7)
-690         Q% = p%+NO% + ((y%-1)*40)
-700         FOR R% = 1 TO 5
-710             IF (?Q% AND P%) = 0 THEN R%=10 ELSE M%=M%-1
-720              Q% = Q% - 40
-730         NEXT
-740         IF NOT(  M% = 0 ) THEN GOTO 800
-750             Q% = p% + NO% + (y%*40)
-760             FOR R% = 0 TO 4
-770                 IF (?Q% AND P%) = 0 THEN M%=M%+1 ELSE R%=10
-780                 Q% = Q% + 40
-790             NEXT
-800         IF NOT(  M%=-5 ) THEN GOTO 830
-810             t%(i%) = -t%(i%)
-820             IF t%(i%) = 1 THEN z%(i%)=j_l% ELSE z%(i%)=j_k%
-830         IF M%<>-5 THEN y% = y%+M%
-840         IF M%<4 THEN x% = x% + t%(i%)
-850         r%(i%) = x%
-860         s%(i%) = y%
-870         VDU 23,27,4,i%
-880         VDU 23,27,13,(x%-6);y%-10;
-890         f% = (v%(i%) + 1) AND 7
-900         v%(i%) = f%
-910         VDU 23, 27, 10, f% + z%(i%)
-920     NEXT
-930     VDU 23, 27, 15
-940     VDU 5
-950     MOVE 0,400
-960 ENDPROC
-970 DEF FNGetCollision(U%,V%)
-980 a% = (U% DIV 8) + (V%*40)
-990 P% = A%(U% AND 7)
-1000 =(?(p%+a%) AND P%)
-1010 DEF PROCInit
-1020     W% = 98
-1030     X% = 49
-1040     A%(0)=1
-1050     A%(1)=2
-1060     A%(2)=4
-1070     A%(3)=8
-1080     A%(4)=16
-1090     A%(5)=32
-1100     A%(6)=64
-1110     A%(7)=128
-1120     FOR i%=0 TO e_g%
-1130         r%(i%) = W%
-1140         s%(i%) = X%
-1150         t%(i%) = 1
-1160         u%(i%) = 0
-1170         v%(i%) = 0
-1180         z%(i%) = j_l%
-1190     NEXT
-1200     PRINT "Loading Collision"
-1210     OSCLI("LOAD data\coll.dat " + STR$(B%+p%) )
-1220     PRINT "Loading Masks"
-1230     OSCLI("LOAD data\masks.spr " + STR$(B%+q%))
-1240     PROCLoadGraphics
-1250 ENDPROC
-1260 DEF PROCLoadGraphics
-1270     VDU 23,1,0
-1280     PRINT "Loading Sprites"
-1290     Y_Z%=0
-1300     FOR i%=0 TO 23
-1310         f$ = "data\lem"+STR$(i%)+".spr"
-1320         PROCLoadBitmap(f$,Y_Z%,16,10)
-1330         Y_Z% = Y_Z% + 1
-1340     NEXT
-1350     PRINT "Loading Background"
-1360     PROCLoadLargeBitmap("data\background.spr",Y_Z%,320,192)
-1370     H% = Y_Z%
-1380     VDU 23, 27, 32, H%;
-1390     VDU 23, 27, 3, 0; 0;
-1400     Y_Z% = Y_Z% + 1
-1410     FOR i%=0 TO e_g%
-1420         VDU 23,27,4,i%
-1430         VDU 23,27,5
-1440         FOR b%=0 TO 23
-1450             VDU 23, 27, &26, b%;
-1460         NEXT
-1470         VDU 23,27,11
-1480     NEXT
-1490     VDU 23,27,4,0
-1500     VDU 23,27,13,30;30;
-1510     VDU 23,27,10,1
-1520     VDU 23,27,15
-1530     VDU 23,27,7,e_g%
-1540 ENDPROC
-1550 DEF PROCLoadMasks(f$,n%)
-1560     OSCLI("LOAD " + f$ + " " + STR$(B%+o%))
-1570     FOR ba%=0 TO n%-1
-1580         q[ba%] = ?(o%+ba%)
-1590     NEXT
-1600 ENDPROC
-1610 DEF PROCLoadBitmap(f$,n%,w%,h%)
-1620     OSCLI("LOAD " + f$ + " " + STR$(B%+o%))
-1630     bb% = w%*h%
-1640     VDU 23, 0 160, n%; 2;
-1650     VDU 23, 0 160, n%; 0,bb%;
-1660     FOR ba%=0 TO bb%-1
-1670         VDU ?(o%+ba%)
-1680     NEXT
-1690     VDU 23, 0, 160, n%; 14
-1700     VDU 23, 27, 32, n%;
-1710     VDU 23, 27, 33, w%; h%; 1
-1720 ENDPROC
-1730 DEF PROCLoadLargeBitmap(f$,n%,w%,h%)
-1740     PRINT "Load file: "+f$
-1750     bc% = OPENIN f$
-1760     bb% = w%*h%
-1770     VDU 23, 0 160, n%; 2;
-1780     G%=0
-1790     bd% = 1024
-1800     be% = bb%
-1810      REPEAT
-1820        IF be% < bd% THEN bd% = be%
-1830        be% = be% - bd%
-1840        PRINT ".";       : 
-1850        VDU 23, 0, 160, n%; 0, bd%;
-1860        FOR i% = 1 TO bd%
-1870          VDU BGET#bc%
-1880        NEXT
-1890      UNTIL be% = 0
-1900     CLOSE #bc%
-1910     VDU 23, 0, 160, n%; 14
-1920     VDU 23, 27, 32, n%;
-1930     VDU 23, 27, 33, w%; h%; 1
-1940 ENDPROC
+430     J% = ?(q%+n%)
+440     J% = J% + (?(q%+n%+1)*256)
+450     w% = ?(q%+n%+2)
+460     h% = ?(q%+n%+3)
+470     K% = ?(q%+n%+4)
+480     L% = ?(q%+n%+5)
+490     n% = n% + 6
+500     M% = n%
+510     FOR i%=0 TO h%
+520         VDU 23, 0, 160, (H%); 5,    &C5, (320*y%)+x%+(320*i%); w%+1;
+530         FOR b%= 0 TO w%
+540             VDU ?(q%+n%+b%)
+550         NEXT
+560         n% = n% + b%
+570     NEXT
+580     N% = x% AND 7
+590     N% = N% * (K%*L%)
+600     N% = N% + ((w%+1)*(h%+1))
+610     N% = N% + M%
+620     PRINT " "
+630     PRINT "off="+STR$(N%)
+640     O% = (x%/8) + (y%*40)
+650     P% = p% + O%
+660     Q% = q% + N%
+670     FOR R% =0 TO (L%-1)
+680         FOR S% =0 TO (K%-1)
+690             ?P% = ?Q% AND ?P%
+700             Q% = Q% + 1
+710             P% = P% + 1
+720         NEXT
+730         P% = P% + (40-K%)
+740     NEXT
+750 ENDPROC
+760 DEF PROCProcessLemmings
+770     IF E%=e_g% GOTO 830
+780     C% = C% - 1
+790     IF NOT(  C%=0 ) THEN GOTO 830
+800         C% = D%
+810         u%(E%) = 1
+820         E% = E% + 1
+830     FOR i%=0 TO e_g%
+840         IF u%(i%) = 0 GOTO 1130
+850         x% = r%(i%)
+860         y% = s%(i%)
+870         W%=0
+880         XY% = x% DIV 8
+890         Z% =  A%(x% AND 7)
+900         P% = p%+XY% + ((y%-1)*40)
+910         FOR R% = 1 TO 5
+920             IF (?P% AND Z%) = 0 THEN R%=10 ELSE W%=W%-1
+930              P% = P% - 40
+940         NEXT
+950         IF NOT(  W% = 0 ) THEN GOTO 1010
+960             P% = p% + XY% + (y%*40)
+970             FOR R% = 0 TO 4
+980                 IF (?P% AND Z%) = 0 THEN W%=W%+1 ELSE R%=10
+990                 P% = P% + 40
+1000             NEXT
+1010         IF NOT(  W%=-5 ) THEN GOTO 1040
+1020             t%(i%) = -t%(i%)
+1030             IF t%(i%) = 1 THEN z%(i%)=j_l% ELSE z%(i%)=j_k%
+1040         IF W%<>-5 THEN y% = y%+W%
+1050         IF W%<4 THEN x% = x% + t%(i%)
+1060         r%(i%) = x%
+1070         s%(i%) = y%
+1080         VDU 23,27,4,i%
+1090         VDU 23,27,13,(x%-6);y%-10;
+1100         f% = (v%(i%) + 1) AND 7
+1110         v%(i%) = f%
+1120         VDU 23, 27, 10, f% + z%(i%)
+1130     NEXT
+1140     VDU 23, 27, 15
+1150 ENDPROC
+1160 DEF FNGetCollision(bc%,bd%)
+1170 a% = (bc% DIV 8) + (bd%*40)
+1180 Z% = A%(bc% AND 7)
+1190 =(?(p%+a%) AND Z%)
+1200 DEF PROCInit
+1210     be% = 98
+1220     bf% = 49
+1230     A%(0)=1
+1240     A%(1)=2
+1250     A%(2)=4
+1260     A%(3)=8
+1270     A%(4)=16
+1280     A%(5)=32
+1290     A%(6)=64
+1300     A%(7)=128
+1310     FOR i%=0 TO e_g%
+1320         r%(i%) = be%
+1330         s%(i%) = bf%
+1340         t%(i%) = 1
+1350         u%(i%) = 0
+1360         v%(i%) = 0
+1370         z%(i%) = j_l%
+1380     NEXT
+1390     PRINT "Loading Collision"
+1400     OSCLI("LOAD data\coll.dat " + STR$(B%+p%) )
+1410     PRINT "Loading Masks"
+1420     OSCLI("LOAD data\masks.spr " + STR$(B%+q%))
+1430     PROCLoadGraphics
+1440 ENDPROC
+1450 DEF PROCLoadGraphics
+1460     VDU 23,1,0
+1470     PRINT "Loading Sprites"
+1480     bg_bh%=0
+1490     FOR i%=0 TO 23
+1500         f$ = "data\lem"+STR$(i%)+".spr"
+1510         PROCLoadBitmap(f$,bg_bh%,16,10)
+1520         bg_bh% = bg_bh% + 1
+1530     NEXT
+1540     PRINT "Loading Background"
+1550     PROCLoadLargeBitmap("data\background.spr",bg_bh%,320,192)
+1560     H% = bg_bh%
+1570     VDU 23, 27, 32, H%;
+1580     VDU 23, 27, 3, 0; 0;
+1590     bg_bh% = bg_bh% + 1
+1600     FOR i%=0 TO e_g%
+1610         VDU 23,27,4,i%
+1620         VDU 23,27,5
+1630         FOR b%=0 TO 23
+1640             VDU 23, 27, &26, b%;
+1650         NEXT
+1660         VDU 23,27,11
+1670     NEXT
+1680     VDU 23,27,4,0
+1690     VDU 23,27,13,30;30;
+1700     VDU 23,27,10,1
+1710     VDU 23,27,15
+1720     VDU 23,27,7,e_g%
+1730 ENDPROC
+1740 DEF PROCLoadMasks(f$,n%)
+1750     OSCLI("LOAD " + f$ + " " + STR$(B%+o%))
+1760     FOR bi%=0 TO n%-1
+1770         q[bi%] = ?(o%+bi%)
+1780     NEXT
+1790 ENDPROC
+1800 DEF PROCLoadBitmap(f$,n%,w%,h%)
+1810     OSCLI("LOAD " + f$ + " " + STR$(B%+o%))
+1820     bj% = w%*h%
+1830     VDU 23, 0 160, n%; 2;
+1840     VDU 23, 0 160, n%; 0,bj%;
+1850     FOR bi%=0 TO bj%-1
+1860         VDU ?(o%+bi%)
+1870     NEXT
+1880     VDU 23, 0, 160, n%; 14
+1890     VDU 23, 27, 32, n%;
+1900     VDU 23, 27, 33, w%; h%; 1
+1910 ENDPROC
+1920 DEF PROCLoadLargeBitmap(f$,n%,w%,h%)
+1930     PRINT "Load file: "+f$
+1940     ba% = OPENIN f$
+1950     bj% = w%*h%
+1960     VDU 23, 0 160, n%; 2;
+1970     bb% = 1024
+1980     bc% = bj%
+1990      REPEAT
+2000        IF bc% < bb% THEN bb% = bc%
+2010        bc% = bc% - bb%
+2020        PRINT ".";       : 
+2030        VDU 23, 0, 160, n%; 0, bb%;
+2040        FOR i% = 1 TO bb%
+2050          VDU BGET#ba%
+2060        NEXT
+2070      UNTIL bc% = 0
+2080     CLOSE #ba%
+2090     VDU 23, 0, 160, n%; 14
+2100     VDU 23, 27, 32, n%;
+2110     VDU 23, 27, 33, w%; h%; 1
+2120 ENDPROC
